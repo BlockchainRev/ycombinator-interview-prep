@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YC Interview Prep</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            background-color: #fafafa;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #ff6600;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #e55500;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: transform 0.3s;
+            overflow: hidden;
+        }
+
+        .card.flipped {
+            transform: scale(0.98);
+        }
+
+        .timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff6600;
+        }
+
+        .question {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .answer {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.6;
+            text-align: left;
+            max-width: 600px;
+            display: none;
+        }
+
+        .answer.show {
+            display: block;
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        .progress {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .instruction {
+            color: #666;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .doomsday-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff6600;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(255, 102, 0, 0.3);
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .doomsday-title {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .doomsday-time {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .doomsday-date {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .pg-frown {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ff6600;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .pg-frown.show {
+            display: flex;
+        }
+
+        .pg-emoji {
+            font-size: 120px;
+            margin-bottom: 20px;
+        }
+
+        .pg-message {
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .timer-paused {
+            color: #999 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="doomsday-counter">
+        <div class="doomsday-title">YC Interview In:</div>
+        <div class="doomsday-time" id="countdown">Loading...</div>
+        <div class="doomsday-date">Tuesday, Aug 19 @ 2:45 PM PST</div>
+    </div>
+    
+    <div class="container">
+        <h1>YC Interview Prep</h1>
+        
+        <div id="uploadSection" class="upload-section">
+            <p>Paste your CSV data (Question,Answer format) or use the preloaded questions:</p>
+            <textarea id="csvInput" placeholder="Question,Answer&#10;&quot;How will you get users?&quot;,&quot;Your answer here...&quot;"></textarea>
+            <br>
+            <button onclick="loadCSV()">Load CSV</button>
+            <button onclick="usePreloaded()">Use Preloaded Questions</button>
+        </div>
+
+        <div id="quizSection" class="hidden">
+            <div class="card" id="card">
+                <div class="timer" id="timer">15</div>
+                <div class="question" id="question"></div>
+                <div class="answer" id="answer"></div>
+                <div class="pg-frown" id="pgFrown">
+                    <div class="pg-emoji">😠</div>
+                    <div class="pg-message">Time's up!</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startBtn" onclick="startTimer()">Start Timer</button>
+                <button id="resumeBtn" onclick="resumeTimer()" style="display: none;">Resume Timer</button>
+                <button id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+                <button onclick="resetQuiz()">Reset</button>
+            </div>
+            
+            <div class="progress" id="progress"></div>
+            <div class="instruction">SPACEBAR: Reveal answer | ← →: Navigate questions | P: Pause/Resume timer</div>
+        </div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentIndex = 0;
+        let timerInterval;
+        let isFlipped = false;
+        let isPaused = false;
+        let remainingSeconds = 15;
+
+        const preloadedData = `Question,Answer
+"How will you get users?","Warm connection to Interchange Capital partners, bringing CEO on as industry expert. Direct LinkedIn outreach to solo RIAs - we can personally reach 50-100/week. Target XY Planning Network's tech-forward advisors. Weekly calls with RIAs we're already talking to. Once we have 10 happy users, word-of-mouth in tight-knit RIA community."
+"What problems/hurdles are you anticipating?","Building trust to have industry expertise as 18-20 year olds selling to 50+ year old advisors. Getting voice recognition perfect for financial terms. Integration complexity with legacy systems. Balancing school until we drop out. Being better than competitors already established."
+"How much does customer acquisition cost?","Currently $0 - just founder time. B2B SaaS averages $300-500 CAC. We'll beat that through direct outreach and product-led growth. Conference attendance later could be $250/lead."
+"How many users do you have?","Zero - pre-launch. Multiple RIAs in weekly customer development calls. Built working voice demo in 48 hours."
+"What are the key things about your field that outsiders don't understand?","RIAs can't use ChatGPT - client data can't leave devices. Advisors spend only 20% time with clients, 50% on back-office work. Average RIA has 71 clients, not hundreds. Compliance violations end careers."
+"How will customers and/or users find out about you?","Start small with Interchange Capital, build, grow from there. Warm connections from Interchange, then direct founder outreach on LinkedIn. Word-of-mouth from early adopters. SEO content Vineet's building. Local NYC RIA meetups."
+"How do you know customers need what you're making?","Mikul/Vineet lived this at Rockbridge PE - same compliance constraints. Weekly RIA calls confirm pain. Jump raised $20M, Zocks $13.8M for inferior cloud solutions."
+"Who would you hire or how would you add to your team?","Customer success person who knows RIAs. Voice engineer for financial terminology. Users of RIA software. Depends on bottleneck."
+"Why did you choose this idea?","Personal pain at PE firms - banned from AI, switching between tools. Started general assistant, but regulated industries were most engaged. RIAs have same problem but no IT teams, more fragmented."
+"What is your user growth rate?","Pre-launch. Target: 5 customers month 1, 20 by month 3. Following Jump's trajectory."
+"Why will you succeed?","We lived the problem working in PE, our friends did too. All technical founders and we don't know many builders better than us that work faster and solve harder problems. Samay shipped AI for 7-figure exit at AskMia. Voice + local + unlimited MCP integrations + long automated workflows is unique - nobody else doing both."
+"How are you meeting customers?","Warm intros through PE networks. Weekly Zoom calls with RIAs. Cold LinkedIn outreach."
+"How is your product different?","Voice-first vs typing. Local vs cloud. General assistant vs single tools. Built for small RIAs."
+"So what are you working on?","Voice-controlled AI assistant for financial advisors that runs locally. Saves hours on CRM updates, compliance docs, client prep."
+"What's the conversion rate?","Unknown - pre-launch. Expect 20% demo-to-paid based on B2B benchmarks."
+"Who is going to be your first paying customer?","Solo RIA from our weekly calls, likely managing $100-300M. Someone frustrated with current tools."
+"Do you have a demo?","Yes - working voice assistant built in 48 hours. Shows voice commands for RIA workflows."
+"Why isn't someone already doing this?","Hardware just became capable - 10+ TOPS on-device AI. Voice accuracy hit 95% recently. Competitors locked in cloud. Requires AI + finance + compliance knowledge."
+"Six months from now, what's going to be your biggest problem?","Supporting and onboarding non-technical advisors. Managing integrations and scaling to more customers. Deciding whether to stay in school."
+"What do you understand that others don't?","Advisors don't want more features - they want fewer clicks. Local isn't a limitation, it's the killer feature. Voice is 3x faster than typing."
+"Where do new users come from?","70% direct outreach, 20% referrals, 10% inbound from content."
+"How does your product work in more detail?","Electron app overlay. Whisper for voice processing. Local LLM for queries. MCP for tool connections. Zero cloud dependencies."
+"How much money could you make per year?","330,000 US advisors × 10% share × $75/month = $300M ARR potential. Conservative Year 3: $10M ARR."
+"Who would use your product?","Solo RIAs with 50-100 clients. Small teams without IT. Anyone banned from ChatGPT for compliance."
+"What obstacles will you face and how will you overcome them?","Age gap - overcome with results. Integration complexity - start with screen scraping. Trust - free pilots."
+"What is your growth like?","Pre-launch. Multiple RIAs in weekly calls. Built demo in 48 hours."
+"What's new about what you make?","First voice interface for financial services. Only local AI for compliance. Unified assistant."
+"How big an opportunity is there?","330,000 US advisors = $4B TAM. Adjacent markets (CPAs, lawyers, healthcare) = $50B+."
+"If your startup succeeds, what additional areas might you be able to expand into?","Law firms, accounting, healthcare - any regulated industry with confidential data."
+"What are you going to do next?","Close 5 pilots from current pipeline. Build first integration. Move to SF if accepted."
+"What part of your project are you going to build first?","Voice interface for CRM queries. Local processing pipeline. Meeting transcription."
+"What have you learned so far from working on your product?","Regulated industries need this most. Voice demos convert better. Compliance > features."
+"How many users are paying?","Zero - pre-launch. Multiple RIAs interested. Will have first paying within 30 days."
+"Who needs what you're making?","Solo RIAs drowning in admin. Advisors spending 50% time on non-client work."
+"What resistance will they have to trying you and how will you overcome it?","Our lack of experience in the specific RIA industry. We'll overcome it by partnering with open-minded RIAs, learning their software and workflows, and taking what we know from PE."
+"How did your team meet?","Mikul and Vineet are brothers. Mikul and Samay met at Columbia freshman orientation. Built 6 projects together."
+"What domain expertise do you have?","Mikul/Vineet: Rockbridge PE experience. Samay: Built AskMia's AI. 2+ years building AI systems."
+"What will you do if we don't fund you?","Continue with $30K from LeapYear. Raise from VCs, apply to other accelerators. Chase after RIAs to revenue. Apply to other accelerators."
+"What is the next step with the product evolution?","RIA-specific voice commands. First integration. Compliance logging. Launch with 5 beta customers."
+"Are you open to changing your idea?","Open to adjacent markets, same core problem. Voice + local for regulated industries is the insight."
+"Who would be your next hire?","Customer success or voice engineer. Depends on bottleneck."
+"Why do the reluctant users hold back?","Fear of tech (advisors average 50+). Compliance concerns. Comfortable with painful workflows."
+"Why did you pick this idea to work on?","Personal pain at PE firms. Built for ourselves, found RIAs desperate. Perfect timing with AI capabilities."
+"Who is 'the boss'?","Mikul as CEO. Equal equity (33.33% each). Clear roles but decisions together."
+"How long can you go before funding?","6 months on $30K. Can extend with revenue. Need funding to scale."
+"Who are your competitors?","Legacy: Wealthbox, Redtail (no AI). AI: Jump ($20M, meeting notes only). We're voice + local."
+"Someone just showed us an idea like this right before you guys. I don't like it. What else do you have?","If two teams are here, problem is massive. But we have 10+ other ideas from our application."
+"What's the funniest thing that has happened to you?","Built Lucidrem dream journal. User posted dream about boss as dragon. Boss found it, DM'd asking if it was them."
+"What makes new users try you?","Frustration with 7-8 apps. Banned from ChatGPT. Voice demo showing instant results."
+"What is your distribution strategy?","Direct founder sales → customer referrals → integration partnerships → conference circuit."
+"What do you understand about your users?","Time-starved, not tech-resistant. Trust > features. Compliance is existential."
+"What's the biggest mistake you have made?","Built general assistant first without talking to an absurd amount of customers + Building before knowing exactly what RIAs want. Should've focused on regulated industries immediately."
+"Where is the rocket science here?","Local AI with financial accuracy. Voice for 'basis points,' 'RMDs.' Unified interface across 7+ tools."
+"Who might become competitors?","Thyme AI - YC backed company."
+"Who in your team does what?","Mikul: Product, customers. Samay: Core AI, voice. Vineet: Website, operations. All code."
+"Tell us about a tough problem you solved?","Samay: Rebuilt failed AI at AskMia in 3 weeks. Mikul: Patents, ISEF winner. Team: 48-hour voice demo."
+"What, exactly, makes you different from existing options?","Voice vs typing. Local vs cloud. General vs single-purpose. Simple vs complex."
+"How will you make money?","$75/month solo RIAs. $150/user teams. 70% margins thanks to local processing."
+"What systems have you hacked?","[Need specific example from founders - don't make this up]"
+"How do we know your team will stick together?","Brothers + best friends. Built 6 projects together. Equal equity. All willing to drop out."
+"What's an impressive thing you have done?","Samay: AskMia's 7-figure AI. Mikul: ISEF winner. Vineet: Published research. Team: Built Lucidrem (500+ users)."
+"Will you reincorporate as a US company?","[Need to verify actual incorporation status - don't assume Delaware C-Corp]"
+"What has surprised you about user behaviour?","Advisors memorize client details rather than search. Violate compliance daily using WhatsApp. Voice feels natural."
+"How are you understanding customer needs?","Weekly RIA calls. Lived problem at PE firms. Tracking every pain point systematically."`;
+
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            const result = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const regex = /"([^"]*)","([^"]*)"/;
+                const match = lines[i].match(regex);
+                if (match) {
+                    result.push({
+                        question: match[1],
+                        answer: match[2]
+                    });
+                }
+            }
+            
+            return result;
+        }
+
+        function loadCSV() {
+            const csvInput = document.getElementById('csvInput').value;
+            if (!csvInput.trim()) {
+                alert('Please paste CSV data first');
+                return;
+            }
+            
+            questions = parseCSV(csvInput);
+            if (questions.length === 0) {
+                alert('No valid questions found in CSV');
+                return;
+            }
+            
+            startQuiz();
+        }
+
+        function usePreloaded() {
+            questions = parseCSV(preloadedData);
+            startQuiz();
+        }
+
+        function startQuiz() {
+            document.getElementById('uploadSection').classList.add('hidden');
+            document.getElementById('quizSection').classList.remove('hidden');
+            
+            questions = shuffleArray(questions);
+            currentIndex = 0;
+            showQuestion();
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function showQuestion() {
+            if (currentIndex >= questions.length) {
+                alert('Quiz completed! Starting over...');
+                currentIndex = 0;
+                questions = shuffleArray(questions);
+            }
+            
+            const question = questions[currentIndex];
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('answer').textContent = question.answer;
+            document.getElementById('answer').classList.remove('show');
+            document.getElementById('card').classList.remove('flipped');
+            document.getElementById('timer').textContent = '15';
+            document.getElementById('timer').classList.remove('timer-paused');
+            document.getElementById('pgFrown').classList.remove('show');
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').style.display = 'inline-block';
+            document.getElementById('resumeBtn').style.display = 'none';
+            document.getElementById('nextBtn').disabled = true;
+            
+            updateProgress();
+            isFlipped = false;
+            isPaused = false;
+            remainingSeconds = 15;
+            
+            // Auto-start timer when showing new question
+            startTimer();
+        }
+
+        function startTimer() {
+            // Clear any existing timer
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('resumeBtn').style.display = 'inline-block';
+            isPaused = false;
+            document.getElementById('timer').classList.remove('timer-paused');
+            
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    remainingSeconds--;
+                    document.getElementById('timer').textContent = remainingSeconds;
+                    
+                    if (remainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        document.getElementById('timer').textContent = '0';
+                        document.getElementById('pgFrown').classList.add('show');
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isPaused = true;
+            document.getElementById('timer').classList.add('timer-paused');
+        }
+
+        function resumeTimer() {
+            isPaused = false;
+            document.getElementById('timer').classList.remove('timer-paused');
+        }
+
+        function flipCard() {
+            if (!isFlipped) {
+                document.getElementById('answer').classList.add('show');
+                document.getElementById('card').classList.add('flipped');
+                document.getElementById('nextBtn').disabled = false;
+                isFlipped = true;
+                
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                }
+            }
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex >= questions.length) {
+                currentIndex = 0;
+            }
+            showQuestion();
+        }
+
+        function prevQuestion() {
+            currentIndex--;
+            if (currentIndex < 0) {
+                currentIndex = questions.length - 1;
+            }
+            showQuestion();
+        }
+
+        function updateProgress() {
+            document.getElementById('progress').textContent = 
+                `Question ${currentIndex + 1} of ${questions.length}`;
+        }
+
+        function resetQuiz() {
+            clearInterval(timerInterval);
+            document.getElementById('uploadSection').classList.remove('hidden');
+            document.getElementById('quizSection').classList.add('hidden');
+            document.getElementById('csvInput').value = '';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('quizSection').classList.contains('hidden')) {
+                return;
+            }
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                flipCard();
+            } else if (e.code === 'ArrowRight') {
+                e.preventDefault();
+                nextQuestion();
+            } else if (e.code === 'ArrowLeft') {
+                e.preventDefault();
+                prevQuestion();
+            } else if (e.code === 'KeyP') {
+                e.preventDefault();
+                if (isPaused) {
+                    resumeTimer();
+                } else {
+                    pauseTimer();
+                }
+            }
+        });
+
+        // Countdown timer
+        function updateCountdown() {
+            const interviewDate = new Date('2025-08-19T14:45:00-07:00'); // Aug 19, 2025, 2:45 PM PST
+            const now = new Date();
+            const diff = interviewDate - now;
+            
+            if (diff <= 0) {
+                document.getElementById('countdown').textContent = 'GOOD LUCK!';
+                return;
+            }
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            let timeString = '';
+            if (days > 0) {
+                timeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+            } else if (hours > 0) {
+                timeString = `${hours}h ${minutes}m ${seconds}s`;
+            } else if (minutes > 0) {
+                timeString = `${minutes}m ${seconds}s`;
+            } else {
+                timeString = `${seconds}s`;
+            }
+            
+            document.getElementById('countdown').textContent = timeString;
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
